@@ -1,2 +1,4 @@
+# Ignore stack generated content
+stack.yaml.lock
 .stack-work/
 *~
