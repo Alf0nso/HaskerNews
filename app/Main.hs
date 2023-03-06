@@ -5,9 +5,11 @@ import Text.HTML.Scalpel
 
 -- main :: IO ()
 -- main = do
---   something <- allTag hackerNewsPosts hackerNewsUrl
+--   something <- allTag hackerNewsPathToP hackerNewsUrl
 --   case something of
---     Just s -> print s
+--     Just s -> do print s
+--                  print $ length s
+--                  
 --     Nothing -> print "no element"
 
 -- main :: IO ()
@@ -19,7 +21,8 @@ import Text.HTML.Scalpel
 
 main :: IO ()
 main = do
-  posts <- allPagePosts
+  posts <- getPostTitle
   case posts of
-    Just ps -> print ps
+    Just ps -> do print ps
+                  print $ length ps
     Nothing  -> print "error"

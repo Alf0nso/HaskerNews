@@ -1,10 +1,16 @@
 module HackerNewsE ( allTag
                    , hackerNewsUrl
-                   , hackerNewsPosts
-                   , allPagePosts )
+                   , hnPostHeader
+                   , getPostTitle
+--                   , hackerNewsPathToP
+--                   , getPostInfo
+--                   , hackerNewsPosts
+--                   , allPagePosts )
+                   )
 where
 
 import Text.HTML.Scalpel
+import Control.Applicative (many)
 
 hackerNewsUrl :: String
 hackerNewsUrl = "https://news.ycombinator.com/"
@@ -13,27 +19,33 @@ allTag :: Selector -> URL -> IO (Maybe [String])
 allTag s url =
   scrapeURL url (htmls s)
 
-allPagePosts :: IO (Maybe [HNPost])
-allPagePosts = scrapeURL hackerNewsUrl hackerNewsPosts
+-- allPagePosts :: IO (Maybe [HNPost])
+-- allPagePosts = scrapeURL hackerNewsUrl hackerNewsPosts
 
-{- The hacker news website contains all the posts on a table.
-This table follows the following structure:
-<tr><td><table>...</table></td></tr> -}
+data HNPost = HNPost { head :: String, subtext :: String }
 
-hackerNewsPathToP :: Selector
-hackerNewsPathToP = tagSelector "tr"
-                    // tagSelector "td"
-                    // tagSelector "table"
+postHeader :: Selector
+postHeader = TagString "tr" @: [ hasClass "athing" ]
 
-data HNPost = HNPost
-  { head :: String, subText :: String }
-  deriving Show
+hnPostHeader :: Scraper String [String]
+hnPostHeader = chroots postHeader
+               $ do title <- text $ TagString "span" @: [ hasClass
+                                                          "titleline" ]
+                    return title
 
-hackerNewsPosts :: Scraper String [HNPost]
-hackerNewsPosts = chroots hackerNewsPathToP headAndSubtext
+getPostTitle :: IO (Maybe [String])
+getPostTitle = scrapeURL hackerNewsUrl hnPostHeader
+                      
+  
 
-headAndSubtext :: Scraper String HNPost
-headAndSubtext = do
-  head    <- text $ TagString "tr" @: [ hasClass "athing" ]
-  subtext <- text $ TagString "td" @: [ hasClass "subtext" ]
-  return $ HNPost head subtext
+postSubText :: Selector
+postSubText = TagString "span" @: [ hasClass "subline" ]
+
+-- head :: Scraper String HNPost
+-- head = 
+-- headAndSubtext :: Scraper String HNPost
+-- headAndSubtext = inSerial $
+--   do head    <- text $ TagString "tr" @: [ hasClass "athing" ]
+--      subtext <- text $ TagString "td" @: [ hasClass "subtext" ]
+--      return $ HNPost head subtext
+-- 
