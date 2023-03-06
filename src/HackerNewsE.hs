@@ -1,24 +1,33 @@
+{-# LANGUAGE OverloadedStrings #-}
+
 module HackerNewsE ( allTag
                    , hackerNewsUrl
                    , hnPostHeader
-                   , getPostTitle
---                   , hackerNewsPathToP
---                   , getPostInfo
---                   , hackerNewsPosts
---                   , allPagePosts )
+                   , getPostTitleRank
+                   , getPostCommentPoint
                    )
 where
 
 import Text.HTML.Scalpel
+import Data.List.Split ( splitOn )
+import Text.Read
 
+{- Helper functions -}
 hackerNewsUrl :: String
 hackerNewsUrl = "https://news.ycombinator.com/"
+
+getIntFromHNattr :: String -> String -> (Int, Bool)
+getIntFromHNattr s atr =
+  case possibleInt of
+    Just i  -> (i, True)
+    Nothing -> (0, False)
+  where
+    possibleInt :: Maybe Int
+    possibleInt = readMaybe $ head $ splitOn s atr
 
 allTag :: Selector -> URL -> IO (Maybe [String])
 allTag s url =
   scrapeURL url (htmls s)
-
-data HNPost = HNPost { head :: String, subtext :: String }
 
 {- Post Title and respective rank. -}
 postHeader :: Selector
@@ -30,15 +39,10 @@ hnPostHeader =  chroots postHeader
                                                            "titleline" ]
                      rank  <- text $ TagString "span" @: [ hasClass
                                                            "rank" ]
-                     
-                     return (rankToInt rank, title)
-  where
-    rankToInt :: String -> Int
-    rankToInt = read . init
+                     return (fst $ getIntFromHNattr "." rank, title)
 
-getPostTitle :: IO (Maybe [(Int, String)])
-getPostTitle = scrapeURL hackerNewsUrl hnPostHeader
-
+getPostTitleRank :: IO (Maybe [(Int, String)])
+getPostTitleRank = scrapeURL hackerNewsUrl hnPostHeader
 
 {- Post number of comments and respective points. -}
 postSubText :: Selector
@@ -46,16 +50,21 @@ postSubText = TagString "span" @: [ hasClass "subline" ]
 
 type Points         = Int
 type NumberComments = Int
-hnPostSubText :: Scraper String [(Int, Points)]
-hnPostSubText = 
 
+hnPostSubText :: Scraper String [(NumberComments, Points)]
+hnPostSubText = chroots postSubText
+                $ do points   <- text $ TagString "span" @: [ hasClass
+                                                              "score" ]
+                     [_, comments] <- texts
+                                         $ TagString "a" @:
+                                         [ match checkCommentAttr ]
 
+                     return ( fst $ getIntFromHNattr "\160" comments
+                            , fst $ getIntFromHNattr " " points)
+  where
+    checkCommentAttr :: String -> String -> Bool
+    checkCommentAttr "href" ('i':'t':'e':'m':_) = True
+    checkCommentAttr _ _                        = False
 
--- head :: Scraper String HNPost
--- head = 
--- headAndSubtext :: Scraper String HNPost
--- headAndSubtext = inSerial $
---   do head    <- text $ TagString "tr" @: [ hasClass "athing" ]
---      subtext <- text $ TagString "td" @: [ hasClass "subtext" ]
---      return $ HNPost head subtext
--- 
+getPostCommentPoint :: IO (Maybe [(NumberComments, Points)])
+getPostCommentPoint = scrapeURL hackerNewsUrl hnPostSubText

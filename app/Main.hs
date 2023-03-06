@@ -21,7 +21,7 @@ import Text.HTML.Scalpel
 
 main :: IO ()
 main = do
-  posts <- getPostTitle
+  posts <- getPostCommentPoint
   case posts of
     Just ps -> do print ps
                   print $ length ps
