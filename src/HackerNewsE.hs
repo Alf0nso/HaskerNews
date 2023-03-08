@@ -1,13 +1,20 @@
-module HackerNewsE ( allTag
-                   , hackerNewsUrl
-                   , hnPostHeader
-                   , getPostTitleRank
-                   , getPostCommentPoint
-                   , getInformationOn
-                   , printPosts )
+module HackerNewsE ( getInformationOn
+                   , printPosts
+                   , allTag )
 where
 
-import Text.HTML.Scalpel
+import Text.HTML.Scalpel ( TagName( TagString )
+                         , Selector
+                         , Scraper
+                         , URL
+                         , htmls
+                         , scrapeURL
+                         , (@:)
+                         , hasClass
+                         , chroots
+                         , text
+                         , texts
+                         , match )
 import Data.List.Split ( splitOn )
 import Text.Read
 
@@ -25,11 +32,11 @@ data HackerNewsPost = HackerNewsPost { title    :: Title
 {- print posts in a more readable way -}
 printPosts :: [HackerNewsPost] -> String
 printPosts [] = ""
-printPosts ((HackerNewsPost title rank comments points):posts) =
-  "Title:     " ++ title         ++ "\n" ++
-  "Rank:      " ++ show rank     ++ "\n" ++
-  "Points:    " ++ show points   ++ "\n" ++
-  "Comments:  " ++ show comments ++ "\n" ++
+printPosts ((HackerNewsPost t r c p):posts) =
+  "Title:     " ++ t      ++ "\n" ++
+  "Rank:      " ++ show r ++ "\n" ++
+  "Points:    " ++ show p ++ "\n" ++
+  "Comments:  " ++ show c ++ "\n" ++
   "----------------------------------\n" ++
   printPosts posts
 
@@ -37,8 +44,9 @@ combineAll :: [(Rank, Title)]
            -> [(NumberComments, Points)]
            -> [HackerNewsPost]
 combineAll [] [] = []
-combineAll ((rank,title):trs) ((comments, points):cps) =
-  (HackerNewsPost title rank comments points):combineAll trs cps
+combineAll ((r, t):trs) ((c, p):cps) =
+  (HackerNewsPost t r c p):combineAll trs cps
+combineAll _ _   = []
 
 {- The important url -}
 hackerNewsUrl :: String
@@ -65,11 +73,11 @@ postHeader = TagString "tr" @: [ hasClass "athing" ]
 
 hnPostHeader :: Scraper String [(Int, String)]
 hnPostHeader =  chroots postHeader
-                $ do title <- text $ TagString "span" @: [ hasClass
-                                                           "titleline" ]
-                     rank  <- text $ TagString "span" @: [ hasClass
-                                                           "rank" ]
-                     return (fst $ getIntFromHNattr "." rank, title)
+                $ do t <- text $ TagString "span" @: [ hasClass
+                                                       "titleline" ]
+                     r <- text $ TagString "span" @: [ hasClass
+                                                       "rank" ]
+                     return (fst $ getIntFromHNattr "." r, t)
 
 getPostTitleRank :: IO (Maybe [(Rank, Title)])
 getPostTitleRank = scrapeURL hackerNewsUrl hnPostHeader
@@ -80,15 +88,13 @@ postSubText = TagString "span" @: [ hasClass "subline" ]
 
 hnPostSubText :: Scraper String [(NumberComments, Points)]
 hnPostSubText = chroots postSubText
-                $ do points        <- text
-                                      $ TagString "span" @: [ hasClass
+                $ do p        <- text $ TagString "span" @: [ hasClass
                                                               "score" ]
-                     [_, comments] <- texts
-                                      $ TagString "a" @:
-                                      [ match checkCommentAttr ]
+                     [_, c] <- texts $ TagString "a" @:
+                               [ match checkCommentAttr ]
 
-                     return ( fst $ getIntFromHNattr "\160" comments
-                            , fst $ getIntFromHNattr " " points)
+                     return ( fst $ getIntFromHNattr "\160" c
+                            , fst $ getIntFromHNattr " " p)
   where
     checkCommentAttr :: String -> String -> Bool
     checkCommentAttr "href" ('i':'t':'e':'m':_) = True
