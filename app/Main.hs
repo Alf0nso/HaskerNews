@@ -1,7 +1,6 @@
 module Main (main) where
 
 import HackerNewsE
-import Text.HTML.Scalpel
 
 main :: IO ()
 main = do
