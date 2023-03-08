@@ -11,4 +11,4 @@ main = do
     Just ps -> do putStrLn $ printPosts ps
                   print $ length ps
     Nothing  ->
-      putStrLn "It was not possible to retrive data from hacker news."
+      putStrLn "It was not possible to retrive data from hacker news!"
