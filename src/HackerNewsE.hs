@@ -1,5 +1,9 @@
 module HackerNewsE ( getInformationOn
                    , printPosts
+                   , filterByWordSize
+                   , sortByRank
+                   , sortByComments
+                   , sortByPoints
                    , allTag )
 where
 
@@ -15,6 +19,8 @@ import Text.HTML.Scalpel ( TagName( TagString )
                          , text
                          , texts
                          , match )
+import Data.List       ( sortBy )
+import Data.Ord        ( comparing )
 import Data.List.Split ( splitOn )
 import Text.Read
 
@@ -27,7 +33,7 @@ data HackerNewsPost = HackerNewsPost { title    :: Title
                                      , rank     :: Rank
                                      , comments :: NumberComments
                                      , points   :: Points }
-                      deriving Show
+                      deriving ( Show, Eq, Ord )
 
 {- print posts in a more readable way -}
 printPosts :: [HackerNewsPost] -> String
@@ -114,3 +120,23 @@ getInformationOn = do ranksTitles    <- getPostTitleRank
                                     Nothing -> return Nothing
                                     Just cp ->
                                       return $ Just $ combineAll rt cp
+
+{- Filter the HackerNews Posts by word size -}
+filterByWordSize :: (Int -> Bool) -> [HackerNewsPost] -> [HackerNewsPost]
+filterByWordSize _ [] = []
+filterByWordSize func (post@(HackerNewsPost {title = t}):posts)
+  | func $ length titleWords = filterByWordSize func posts
+  | otherwise                = post:filterByWordSize func posts
+  where
+    titleWords :: [String]
+    titleWords = words t
+
+{- Order list of HackerNews Posts -}
+sortByRank :: [HackerNewsPost] -> [HackerNewsPost]
+sortByRank = sortBy (comparing rank)
+
+sortByComments :: [HackerNewsPost] -> [HackerNewsPost]
+sortByComments = sortBy (comparing comments)
+
+sortByPoints :: [HackerNewsPost] -> [HackerNewsPost]
+sortByPoints = sortBy (comparing points)
