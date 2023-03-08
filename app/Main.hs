@@ -61,9 +61,20 @@ data OrderedBy = Rank
 
 help :: String
 help = "All the commands: \n" ++
-       "q | quit  -- quiting the program.\n" ++
-       "p | print -- printing Hacker news posts to the terminal.\n" ++
-       "h | help  -- prints this message.\n"
+       "q | quit       -- quiting the program.\n" ++
+       "p | print      -- printing Hacker news posts to the\n"
+       ++ "                  terminal.\n"
+       ++
+       "c | clear      -- Cleans all the changes done to the data\n"
+       ++
+       "                  returning to the original requested data.\n"
+       ++
+       "f | filterWith -- Filter data with a specific filter function\n"
+       ++ "                  which can be for example: filter > 5.\n"
+       ++
+       "o | orderBy    -- Order data by Rank, Points or number of\n"
+       ++ "                  comments, example: orderBy rank\n" ++
+       "h | help       -- prints this message.\n"
 
 notFound :: String
 notFound =
