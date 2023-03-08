@@ -1,4 +1,5 @@
-module HackerNewsE ( getInformationOn
+module HackerNewsE ( HackerNewsPost
+                   , getInformationOn
                    , printPosts
                    , filterByWordSize
                    , sortByRank
