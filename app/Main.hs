@@ -3,26 +3,12 @@ module Main (main) where
 import HackerNewsE
 import Text.HTML.Scalpel
 
--- main :: IO ()
--- main = do
---   something <- allTag hackerNewsPathToP hackerNewsUrl
---   case something of
---     Just s -> do print s
---                  print $ length s
---                  
---     Nothing -> print "no element"
-
--- main :: IO ()
--- main = do
---   something <- allTag test hackerNewsUrl
---   case something of
---     Just s -> print s
---     Nothing -> print "no element"
-
 main :: IO ()
 main = do
-  posts <- getPostCommentPoint
+  posts <- getInformationOn
+  
   case posts of
-    Just ps -> do print ps
+    Just ps -> do putStrLn $ printPosts ps
                   print $ length ps
-    Nothing  -> print "error"
+    Nothing  ->
+      putStrLn "It was not possible to retrive data from hacker news."
